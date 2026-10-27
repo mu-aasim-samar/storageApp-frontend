@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useDirectoryContext } from "../context/DirectoryContext";
 import { Download, Pencil, Trash2, Info, X } from "lucide-react";
+import { axiosWithCreds } from "../api/axiosInstances";
 
 function ContextMenu({ item, isUploadingItem }) {
   const {
@@ -88,8 +89,21 @@ function ContextMenu({ item, isUploadingItem }) {
         <>
           <button
             className={`${btn} text-slate-700 dark:text-slate-200 hover:bg-sky-50/80 dark:hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 group`}
-            onClick={action(() => {
-              window.location.href = `${BASE}/file/${item.id}?action=download`;
+            onClick={action(async () => {
+              try {
+                const { data } = await axiosWithCreds.get(`/file/${item.id}?action=download&json=true`);
+                if (data.url) {
+                  const a = document.createElement("a");
+                  a.href = data.url;
+                  a.download = item.name;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                }
+              } catch (err) {
+                console.error("Download failed:", err);
+                window.location.href = `${BASE}/file/${item.id}?action=download`;
+              }
             })}
           >
             <Download className="w-4 h-4 text-sky-500 transition-transform group-hover:scale-110" />

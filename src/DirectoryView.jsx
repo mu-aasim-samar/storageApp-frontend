@@ -19,6 +19,7 @@ import {
   uploadComplete,
   uploadInitiate,
 } from "./api/fileApi";
+import { axiosWithCreds } from "./api/axiosInstances";
 import { fetchUser } from "./api/userApi";
 import DetailsPopup from "./components/DetailsPopup";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModel";
@@ -171,11 +172,19 @@ function DirectoryView() {
     }
   }
 
-  function handleRowClick(type, id) {
+  async function handleRowClick(type, id) {
     if (type === "directory") {
       navigate(userId ? `/users/${userId}/drive/${id}` : `/directory/${id}`);
     } else {
-      window.location.href = `${import.meta.env.VITE_SERVER_URL}/file/${id}`;
+      try {
+        const { data } = await axiosWithCreds.get(`/file/${id}?json=true`);
+        if (data.url) {
+          window.open(data.url, "_blank");
+        }
+      } catch (err) {
+        console.error("Open file error:", err);
+        window.location.href = `${import.meta.env.VITE_SERVER_URL}/file/${id}`;
+      }
     }
   }
 
